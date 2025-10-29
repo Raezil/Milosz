@@ -35,7 +35,7 @@ const Hero = () => {
           <div className="flex justify-center">
             <div className="w-80 h-80 md:w-96 md:h-96 rounded-full overflow-hidden shadow-2xl border-8 border-white">
               <img
-                src="./zdjecie.jpg"
+                src="https://pixel-p2.s3.eu-central-1.amazonaws.com/doctor/avatar/8e9f3266/8e9f3266-8630-4357-83d3-7e4e028cb24c_medium_square.jpg"
                 alt="Miłosz Szczucki - Fizjoterapeuta"
                 className="w-full h-full object-cover"
               />
