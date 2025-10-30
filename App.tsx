@@ -7,6 +7,7 @@ import Services from './components/Services';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import RateLimiter from './components/RateLimitter';
+import Gallery from './components/Gallery';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Hero />
           <About />
           <Services />
+          <Gallery />
           <Contact />
         </main>
         <Footer />
