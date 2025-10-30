@@ -1,7 +1,41 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { useRateLimiter } from '../hooks/useRateLimiter';
 
-import React from 'react';
+type BlockedAction = 'rezerwacji' | 'telefonu';
+
+const RATE_LIMIT_MAX_ACTIONS = 3;
+const RATE_LIMIT_WINDOW_SECONDS = 60;
 
 const Contact = () => {
+  const [blockedAction, setBlockedAction] = useState<BlockedAction | null>(null);
+  const { attempt, remaining, isRateLimited, timeUntilResetMs } = useRateLimiter({
+    limit: RATE_LIMIT_MAX_ACTIONS,
+    intervalMs: RATE_LIMIT_WINDOW_SECONDS * 1000,
+  });
+
+  useEffect(() => {
+    if (!isRateLimited && blockedAction !== null) {
+      setBlockedAction(null);
+    }
+  }, [blockedAction, isRateLimited]);
+
+  const handleContactAction = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>, action: BlockedAction) => {
+      const result = attempt();
+
+      if (!result.allowed) {
+        event.preventDefault();
+        setBlockedAction(action);
+        return;
+      }
+
+      setBlockedAction(null);
+    },
+    [attempt],
+  );
+
+  const secondsUntilReset = Math.max(1, Math.ceil(timeUntilResetMs / 1000));
+
   return (
     <section id="kontakt" className="py-20 md:py-28 bg-slate-800 text-white">
       <div className="container mx-auto px-6">
@@ -27,7 +61,9 @@ const Contact = () => {
               </div>
               <div>
                 <h4 className="font-semibold">Telefon:</h4>
-                <a href="tel:791918507" className="text-cyan-600 hover:underline">791 918 507</a>
+                <a href="tel:791918507" className="text-cyan-600 hover:underline">
+                  791 918 507
+                </a>
               </div>
               <div>
                 <h4 className="font-semibold">NIP:</h4>
@@ -36,20 +72,37 @@ const Contact = () => {
             </div>
           </div>
           <div className="flex flex-col gap-4">
-            <a 
-              href="https://booksy.com/pl-pl/177561_fizjoterapia-i-osteopatia-milosz-szczucki_fizjoterapia_13750_wroclaw#ba_s=seo$0" 
-              target="_blank" 
+            <a
+              href="https://booksy.com/pl-pl/177561_fizjoterapia-i-osteopatia-milosz-szczucki_fizjoterapia_13750_wroclaw#ba_s=seo$0"
+              target="_blank"
               rel="noopener noreferrer"
+              onClick={(event) => handleContactAction(event, 'rezerwacji')}
               className="w-full text-center bg-cyan-600 text-white font-bold py-4 px-8 rounded-lg text-lg hover:bg-cyan-700 transition-transform hover:scale-105 shadow-lg"
             >
               Rezerwuj wizytę na Booksy
             </a>
-            <a 
-              href="tel:791918507" 
+            <a
+              href="tel:791918507"
+              onClick={(event) => handleContactAction(event, 'telefonu')}
               className="w-full text-center bg-slate-200 text-slate-800 font-bold py-4 px-8 rounded-lg text-lg hover:bg-slate-300 transition-transform hover:scale-105"
             >
               Zadzwoń
             </a>
+            <div className="space-y-1 text-center" aria-live="polite">
+              {isRateLimited && blockedAction && (
+                <p className="text-sm text-red-500">
+                  Zbyt wiele prób {blockedAction === 'rezerwacji' ? 'otwarcia strony rezerwacji' : 'połączenia telefonicznego'}. Spróbuj ponownie za {secondsUntilReset} s.
+                </p>
+              )}
+              {!isRateLimited && remaining < RATE_LIMIT_MAX_ACTIONS && (
+                <p className="text-xs text-slate-500">
+                  Pozostałe próby kontaktu w ciągu {RATE_LIMIT_WINDOW_SECONDS} s: {remaining}
+                </p>
+              )}
+              <p className="text-xs text-slate-500">
+                Limit bezpieczeństwa: maksymalnie {RATE_LIMIT_MAX_ACTIONS} działania kontaktowe na {RATE_LIMIT_WINDOW_SECONDS} sekund.
+              </p>
+            </div>
           </div>
         </div>
       </div>
